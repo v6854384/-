@@ -15,6 +15,7 @@ class Stack
     map<string, double> VarTable; // Таблица переменных
     vector<string> ProgBuf; // Буфер строк с вложенной программой
     string FinVal; // Имя переменной, куда записывается результат
+    bool coutF=true; // Флаг разрешения вывода финального значения
     int ProgBracked=0; // счетчик программных скобок во время буферизации
     int Priority=0; // Приоритет операции
     int StackCalc(double Var, char Op, char Op2);
@@ -62,19 +63,21 @@ bool Stack::ProgExecute(vector<string> Buf) // выполнение програ
         {
             {
             if(Buf[i].length()==5) {Error=true; return false;}
+            coutF=false;
             if(Expr(Buf[i].substr(5,1000)))
-                {LineBack.push_back(i++);cout<<"iteratin "<<endl;}
+                {LineBack.push_back(i++);/*cout<<"iteratin "<<endl*/}
             else
                 {
-                cout<<"beg of down\n";
+               // cout<<"beg of down\n";
                 if(!down(Buf,++i)) {Error=true; return false;}
                 else i++;
-                cout<<"while down is created!\n";
+               // cout<<"while down is created!\n";
                 }
+            coutF=true;
             }
         }
         else if(Buf[i].find("if")==0)
-        {
+        {   coutF=false;
             if(Expr(Buf[i].substr(2,1000)))
                 {LineBack.push_back(-1); i++;} // флаг завершения блока до else
             else
@@ -88,13 +91,14 @@ bool Stack::ProgExecute(vector<string> Buf) // выполнение програ
                     }
                 }
             LineBack.push_back(-1);
+            coutF=true;
             // Пропустить до end или до else если ложь
         }
         else if(Buf[i].find("end")==0)
         {
             if(LineBack.size()==0) {Error=true; cout<<"End without if, while, for"; return false;}
             if(LineBack.back()>=0)
-                {i=LineBack.back(); LineBack.pop_back(); cout<<"back to "<<i<<endl;}
+                {i=LineBack.back(); LineBack.pop_back(); /*cout<<"back to "<<i<<endl;*/}
             else
                 if(LineBack.back()<0){LineBack.pop_back();i++;}
         }
@@ -169,7 +173,7 @@ int Stack::StackCalc(double Var, char Op, char Op2) // Добавление оп
             case '^':
             case 'v': t+=3; break;
 
-            default: cout<<"Syntax error";
+            default: cout<<"Syntax error"; Error=true;
             }
         }
     while(t<=Priorities.back())
@@ -242,8 +246,8 @@ double Stack::Expr(string expr) // Возвращается вычисленны
                     // Вывод переменной на экран
                     if(VarTable.count(VarBuf)==0)
                         {cout<<"Unnoun variable\n"; return false;}
-                  //  else
-                  //      cout<<VarTable[VarBuf]<<endl;
+                    else
+                        {cout<<VarTable[VarBuf]<<endl; return VarTable[VarBuf];}
                     }
                 else
                     if(expr[i]=='+' || expr[i]=='-' || expr[i]=='*' || expr[i]=='/' || expr[i]=='<' || expr[i]=='>' || expr[i]=='!' || expr[i]=='=')
@@ -361,9 +365,9 @@ double Stack::Expr(string expr) // Возвращается вычисленны
     if(Priority!=0)
         {cout<<"Bracket error\n"; return false;}
     else if(FinVal=="")
-        {if(Operands.size()!=0) cout<<Operands.back()<<endl;}
+        {if(Operands.size()!=0 && coutF) cout<<Operands.back()<<endl;}
     else
-        {VarTable[FinVal]=Operands.back();FinVal="";}
+      {VarTable[FinVal]=Operands.back();FinVal="";}
     return Operands.back();
     while(Operands.size()!=0) Operands.pop_back();
     return true;
