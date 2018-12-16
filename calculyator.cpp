@@ -50,13 +50,37 @@ bool down(vector<string> Buf, int &i) // Спуск по списку коман
 bool Stack::ProgExecute(vector<string> Buf) // выполнение программы из буфера
 {
     int i=0;
-
     for(int i=0;i<Buf.size();i++) // Преобразование for в while
-        if(Buf[i].find("for")==0)
+        if(Buf[i].find("for ")==0)
             {
-
+                string str=Buf[i].substr(4,1000);
+                if(str.find("=")==string::npos) {Error=true; cout<<"No '='\n";return false;}
+                string var=str.substr(0,str.find("="));
+                if(var.length()==0) {Error=true; cout<<"No for var\n";return false;}
+                str=str.substr(str.find("=")+1,1000);
+                if(str.find(":")==string::npos) {Error=true; cout<<"No ':'\n";return false;}
+                Buf[i++]=var +"="+ str.substr(0,str.find(":"));
+                str=str.substr(str.find(":")+1,1000);
+                string step="1";
+                if(count(str.begin(),str.end(),':')==1)
+                {
+                    step=str.substr(0,str.find(":"));
+                    str=str.substr(str.find(":")+1,1000);
+                }
+                Buf.insert(Buf.begin()+i, "while "+ var +"<="+ str);
+                int j=i+1;
+                cout<<"* "<<Buf[i]<<endl;
+                if(!down(Buf,j)) {cout<<"There is not 'end' !!!\n"; Error=true;return false;}
+                if(Buf[j].find("end")==string::npos)
+                {
+                    cout<<"There is not 'end'\n";
+                    Error=true;
+                    return false;
+                }
+                Buf.insert(Buf.begin()+j, var + "=" + var + "+" + step);
             }
-
+//    for(i: Buf)
+//        cout<<i<<endl;
     vector<int> LineBack;// Стек номеров строк для возвращения по завершению программнго блока
     for(i=0;i<Buf.size();)
         if(Buf[i].find("while")==0)
